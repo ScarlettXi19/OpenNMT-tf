@@ -2,6 +2,7 @@
 
 import tensorflow as tf
 import opennmt as onmt
+from opennmt.utils.losses import mutant_cross_entropy_sequence_loss
 
 
 class ListenAttendSpell(onmt.models.SequenceToSequence):
@@ -106,6 +107,21 @@ class NMTSmall(onmt.models.SequenceToSequence):
             dropout=0.3,
             residual_connections=False))
 
+    
+class MutantNMTSmall(NMTSmall):
+    def __init__(self):
+        super().__init__()
+
+    def _compute_loss(self, features, labels, outputs, params, mode):
+        return mutant_cross_entropy_sequence_loss(
+            outputs,
+            labels["ids_out"],
+            self._get_labels_length(labels),
+            label_smoothing=params.get("label_smoothing", 0.0),
+            average_in_time=params.get("average_loss_in_time", False),
+            mode=mode)
+
+    
 class SeqTagger(onmt.models.SequenceTagger):
   """Defines a bidirectional LSTM-CNNs-CRF as described in https://arxiv.org/abs/1603.01354."""
   def __init__(self):
